@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="author" content="David Benito Toresano">
+  <meta name="description" content="Presentación del taller de programación agéntica con Google Antigravity">
+  <title>Programación agéntica con Google Antigravity</title>
+  <style>
+    :root {
+      --cream: #f3ead5;
+      --cream-light: #fbf6e9;
+      --cream-deep: #e4d4b5;
+      --ink: #171512;
+      --ink-soft: #39342d;
+      --gold: #9a7437;
+      --gold-light: #c29a58;
+      --terracotta: #8b4938;
+      --green: #334d43;
+      --slide-ratio: calc(16 / 9);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+    }
+
+    body {
+      color: var(--ink);
+      font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+    }
+
+    button { font: inherit; }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      isolation: isolate;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      width: 100%;
+      height: 100%;
+      padding: clamp(2.2rem, 6vw, 6.5rem) clamp(2.2rem, 8vw, 8.5rem);
+      overflow: hidden;
+      background: var(--cream);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(3%);
+      transition: opacity 240ms ease, transform 320ms ease, visibility 0s 320ms;
+    }
+
+    .slide::before,
+    .slide::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .slide::before {
+      inset: clamp(0.8rem, 1.7vw, 1.6rem);
+      border: 1px solid color-mix(in srgb, var(--gold) 75%, transparent);
+    }
+
+    .slide::after {
+      inset: clamp(1.15rem, 2.2vw, 2.1rem);
+      border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      transition-delay: 0s;
+      z-index: 2;
+    }
+
+    .slide.previous { transform: translateX(-3%); }
+
+    .slide.dark {
+      color: var(--cream-light);
+      background: var(--ink);
+    }
+
+    .slide.green {
+      color: var(--cream-light);
+      background: var(--green);
+    }
+
+    .slide.terracotta {
+      color: var(--cream-light);
+      background: var(--terracotta);
+    }
+
+    .slide.dark::before,
+    .slide.green::before,
+    .slide.terracotta::before { border-color: var(--gold-light); }
+
+    .slide.dark::after,
+    .slide.green::after,
+    .slide.terracotta::after { border-color: color-mix(in srgb, var(--gold-light) 45%, transparent); }
+
+    .corner {
+      position: absolute;
+      z-index: 1;
+      width: clamp(2.2rem, 5vw, 5rem);
+      height: clamp(2.2rem, 5vw, 5rem);
+      border-color: var(--gold);
+      pointer-events: none;
+    }
+
+    .dark .corner,
+    .green .corner,
+    .terracotta .corner { border-color: var(--gold-light); }
+
+    .corner.tl { top: 2.2vw; left: 2.2vw; border-top: 4px solid; border-left: 4px solid; }
+    .corner.tr { top: 2.2vw; right: 2.2vw; border-top: 4px solid; border-right: 4px solid; }
+    .corner.bl { bottom: 2.2vw; left: 2.2vw; border-bottom: 4px solid; border-left: 4px solid; }
+    .corner.br { right: 2.2vw; bottom: 2.2vw; border-right: 4px solid; border-bottom: 4px solid; }
+
+    .slide-content {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 78rem);
+      margin-inline: auto;
+    }
+
+    .kicker {
+      margin: 0 0 1rem;
+      color: var(--gold);
+      font-size: clamp(0.72rem, 1.1vw, 1rem);
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .dark .kicker,
+    .green .kicker,
+    .terracotta .kicker { color: var(--gold-light); }
+
+    h1, h2, h3 {
+      margin-top: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      line-height: 0.98;
+    }
+
+    h1 {
+      max-width: 13ch;
+      margin-bottom: 1.4rem;
+      font-size: clamp(3.4rem, 8.2vw, 8rem);
+      letter-spacing: -0.055em;
+    }
+
+    h2 {
+      max-width: 18ch;
+      margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+      font-size: clamp(2.7rem, 6.2vw, 6.2rem);
+      letter-spacing: -0.045em;
+    }
+
+    h3 {
+      margin-bottom: 0.75rem;
+      font-size: clamp(1.55rem, 2.6vw, 2.65rem);
+      line-height: 1.05;
+    }
+
+    p, li, td, th {
+      font-size: clamp(1.05rem, 1.75vw, 1.7rem);
+      line-height: 1.38;
+    }
+
+    p { margin: 0 0 1rem; }
+
+    .lead {
+      max-width: 50rem;
+      color: var(--ink-soft);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.4rem, 2.55vw, 2.5rem);
+      line-height: 1.25;
+    }
+
+    .dark .lead,
+    .green .lead,
+    .terracotta .lead { color: var(--cream-deep); }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      width: min(42rem, 100%);
+      margin: 1.5rem 0;
+      color: var(--gold);
+    }
+
+    .rule::before,
+    .rule::after {
+      content: "";
+      height: 1px;
+      background: currentColor;
+    }
+
+    .rule span { font-size: 1.1rem; }
+
+    .presenter {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 2rem;
+    }
+
+    .gui-logo {
+      flex: 0 0 auto;
+      width: clamp(4rem, 7vw, 6.5rem);
+      height: clamp(4rem, 7vw, 6.5rem);
+      color: var(--gold-light);
+    }
+
+    .gui-logo .logo-light { fill: currentColor; opacity: 0.58; }
+    .gui-logo .logo-dark { fill: currentColor; }
+    .gui-logo text { fill: currentColor; }
+
+    .presenter strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.15rem, 1.8vw, 1.75rem);
+      font-weight: 500;
+    }
+
+    .presenter span {
+      display: block;
+      color: var(--cream-deep);
+      font-size: clamp(0.85rem, 1.15vw, 1.1rem);
+      letter-spacing: 0.03em;
+    }
+
+    .cover .slide-content { padding-left: clamp(0rem, 5vw, 5rem); }
+
+    .cover-mark {
+      position: absolute;
+      right: clamp(3.5rem, 9vw, 9rem);
+      bottom: clamp(3rem, 8vw, 8rem);
+      width: clamp(9rem, 22vw, 22rem);
+      aspect-ratio: 1;
+      border: 1px solid var(--gold-light);
+      border-radius: 50%;
+      opacity: 0.3;
+    }
+
+    .cover-mark::before,
+    .cover-mark::after {
+      content: "";
+      position: absolute;
+      inset: 16%;
+      border: 1px solid var(--gold-light);
+      transform: rotate(45deg);
+    }
+
+    .cover-mark::after { inset: 34%; transform: rotate(0); }
+
+    .columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(2rem, 5vw, 5rem);
+      align-items: start;
+    }
+
+    .columns.three { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1.2rem, 3vw, 3rem); }
+
+    .number {
+      display: block;
+      margin-bottom: 0.6rem;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3rem, 5vw, 5rem);
+      line-height: 1;
+    }
+
+    .dark .number,
+    .green .number,
+    .terracotta .number { color: var(--gold-light); }
+
+    .plain-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .plain-list li {
+      position: relative;
+      margin-bottom: 0.85rem;
+      padding-left: 1.4rem;
+    }
+
+    .plain-list li::before {
+      content: "◆";
+      position: absolute;
+      top: 0.25em;
+      left: 0;
+      color: var(--gold);
+      font-size: 0.55em;
+    }
+
+    .dark .plain-list li::before,
+    .green .plain-list li::before,
+    .terracotta .plain-list li::before { color: var(--gold-light); }
+
+    .sequence {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--gold);
+    }
+
+    .sequence div {
+      position: relative;
+      padding: 1.5rem 1rem 0 0;
+    }
+
+    .sequence div::before {
+      content: "";
+      position: absolute;
+      top: -0.42rem;
+      left: 0;
+      width: 0.75rem;
+      height: 0.75rem;
+      border: 2px solid var(--cream);
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    .sequence strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1rem, 1.55vw, 1.5rem);
+      font-weight: 500;
+    }
+
+    .sequence span {
+      color: var(--ink-soft);
+      font-size: clamp(0.78rem, 1vw, 1rem);
+      line-height: 1.3;
+    }
+
+    .comparison {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .comparison th,
+    .comparison td {
+      padding: clamp(0.55rem, 1.2vw, 1rem);
+      border-bottom: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .comparison th {
+      color: var(--gold);
+      font-size: clamp(0.8rem, 1.1vw, 1rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .comparison td:first-child {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.15rem, 1.65vw, 1.6rem);
+    }
+
+    .code {
+      margin: 1.2rem 0 0;
+      border-left: 3px solid var(--gold-light);
+      padding: 1.15rem 1.4rem;
+      color: var(--cream-light);
+      background: #24201a;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: clamp(0.8rem, 1.18vw, 1.15rem);
+      line-height: 1.48;
+      white-space: pre-wrap;
+    }
+
+    .deco-quote {
+      position: relative;
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 2rem clamp(1.5rem, 5vw, 5rem);
+      text-align: center;
+    }
+
+    .deco-quote::before,
+    .deco-quote::after {
+      content: "";
+      position: absolute;
+      left: 25%;
+      width: 50%;
+      height: 1px;
+      background: var(--gold-light);
+    }
+
+    .deco-quote::before { top: 0; }
+    .deco-quote::after { bottom: 0; }
+
+    .deco-quote p {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 4.4vw, 4.7rem);
+      line-height: 1.08;
+    }
+
+    .deco-quote small {
+      color: var(--cream-deep);
+      font-size: clamp(0.9rem, 1.3vw, 1.2rem);
+    }
+
+    .footer-brand {
+      position: absolute;
+      z-index: 3;
+      right: clamp(2.8rem, 4vw, 4.5rem);
+      bottom: clamp(2.4rem, 3.5vw, 3.7rem);
+      display: flex;
+      gap: 0.55rem;
+      align-items: center;
+      color: var(--gold);
+      font-size: clamp(0.65rem, 0.85vw, 0.82rem);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .dark .footer-brand,
+    .green .footer-brand,
+    .terracotta .footer-brand { color: var(--gold-light); }
+
+    .footer-brand svg { width: 1.55rem; height: 1.55rem; }
+
+    .progress {
+      position: fixed;
+      z-index: 20;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 4px;
+      background: var(--gold-light);
+      transition: width 250ms ease;
+    }
+
+    .counter {
+      position: fixed;
+      z-index: 20;
+      bottom: 0.65rem;
+      left: 50%;
+      color: color-mix(in srgb, var(--cream-light) 75%, transparent);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      transform: translateX(-50%);
+    }
+
+    .nav {
+      position: fixed;
+      z-index: 20;
+      right: 1rem;
+      bottom: 0.85rem;
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .nav button,
+    .help-button {
+      display: grid;
+      place-items: center;
+      width: 2.2rem;
+      height: 2.2rem;
+      border: 1px solid rgb(255 255 255 / 0.28);
+      border-radius: 50%;
+      color: var(--cream-light);
+      background: rgb(23 21 18 / 0.72);
+      cursor: pointer;
+    }
+
+    .help-button {
+      position: fixed;
+      z-index: 20;
+      top: 0.9rem;
+      right: 0.9rem;
+    }
+
+    dialog {
+      max-width: 32rem;
+      border: 1px solid var(--gold);
+      padding: 2rem;
+      color: var(--ink);
+      background: var(--cream-light);
+      box-shadow: 0 2rem 5rem rgb(0 0 0 / 0.4);
+    }
+
+    dialog::backdrop { background: rgb(0 0 0 / 0.65); }
+    dialog h2 { font-size: 2rem; }
+    dialog p { font-size: 1rem; }
+    dialog button { padding: 0.6rem 1rem; }
+
+    @media (max-width: 900px), (max-aspect-ratio: 4 / 3) {
+      .columns,
+      .columns.three { grid-template-columns: 1fr; gap: 1.25rem; }
+      .columns.three { grid-template-columns: repeat(3, 1fr); }
+      .sequence { grid-template-columns: repeat(3, 1fr); row-gap: 1.2rem; border-top: 0; }
+      .sequence div { border-top: 1px solid var(--gold); }
+      .cover-mark { opacity: 0.14; }
+      .comparison td:nth-child(3), .comparison th:nth-child(3) { display: none; }
+    }
+
+    @media (max-width: 650px) {
+      .slide { padding: 4.2rem 2.2rem; overflow-y: auto; }
+      h1 { font-size: clamp(3rem, 15vw, 5.2rem); }
+      h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
+      .columns.three { grid-template-columns: 1fr; }
+      .sequence { grid-template-columns: repeat(2, 1fr); }
+      .presenter { align-items: flex-start; }
+      .footer-brand span { display: none; }
+      .comparison td, .comparison th { font-size: 0.82rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .progress { transition: none; }
+    }
+
+    @media print {
+      html, body { height: auto; overflow: visible; background: white; }
+      .deck { height: auto; }
+      .slide {
+        position: relative;
+        display: grid;
+        width: 297mm;
+        height: 167mm;
+        page-break-after: always;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+      }
+      .nav, .progress, .counter, .help-button { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <section class="slide dark cover active" data-title="Portada">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="cover-mark" aria-hidden="true"></div>
+      <div class="slide-content">
+        <p class="kicker">Taller práctico · 2026</p>
+        <h1>Programación agéntica</h1>
+        <p class="lead">Primeros pasos con Google Antigravity, skills y flujos de trabajo</p>
+        <div class="rule"><span>◆</span></div>
+        <div class="presenter">
+          <svg class="gui-logo" viewBox="0 0 500 500" role="img" aria-label="Logotipo del Grupo Universitario de Informática">
+            <rect class="logo-light" width="25" height="500" x="-227.19438" y="0" transform="rotate(-90)"/>
+            <path class="logo-dark" fill-rule="evenodd" d="M250 50A200 200 0 0 0 50 250a200 200 0 0 0 200 200 200 200 0 0 0 200-200 200 200 0 0 0-.459-12.496h-60.852l-1.572 2.725A137.5 137.5 0 0 1 387.5 250 137.5 137.5 0 0 1 250 387.5 137.5 137.5 0 0 1 112.5 250 137.5 137.5 0 0 1 250 112.5a137.5 137.5 0 0 1 56.783 12.285l31.334-54.271A200 200 0 0 0 250 50z"/>
+            <rect class="logo-light" width="20" height="500" x="-270.2" y="-500" transform="scale(-1)"/>
+            <rect class="logo-light" width="20" height="550" x="-348.08463" y="-360.58023" transform="rotate(-150)"/>
+            <rect class="logo-dark" width="25" height="500" x="-262.5" y="0" transform="rotate(-90)"/>
+            <text x="379.94388" y="188.88235" transform="scale(.961825 1.03969)" font-family="Arial" font-size="126.441">UI</text>
+          </svg>
+          <div>
+            <strong>David Benito Toresano</strong>
+            <span>Grupo Universitario de Informática · Telegram @banaitor</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Objetivos">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Objetivos del taller</p>
+        <h2>Una aplicación, un agente y un flujo completo</h2>
+        <div class="columns three">
+          <div><span class="number">01</span><h3>Configurar</h3><p>Instalación, permisos y primeras decisiones.</p></div>
+          <div><span class="number">02</span><h3>Construir</h3><p>Del objetivo al plan, el código y la prueba.</p></div>
+          <div><span class="number">03</span><h3>Personalizar</h3><p>Reglas, workflows, skills y conexiones MCP.</p></div>
+        </div>
+      </div>
+      <div class="footer-brand"><span>Grupo Universitario de Informática</span></div>
+    </section>
+
+    <section class="slide terracotta" data-title="Cambio de paradigma">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content deco-quote">
+        <p>El trabajo cambia de escribir cada línea a dirigir un proceso verificable</p>
+        <small>Especificar · limitar · revisar · comprobar</small>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Tres niveles">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Modelo mental</p>
+        <h2>Chatbot, asistente y agente</h2>
+        <div class="columns three">
+          <div><span class="number">A</span><h3>Chatbot</h3><p>Responde en una conversación. No actúa sobre el proyecto.</p></div>
+          <div><span class="number">B</span><h3>Asistente</h3><p>Completa y propone código dentro del editor.</p></div>
+          <div><span class="number">C</span><h3>Agente</h3><p>Inspecciona, planifica, edita, ejecuta y verifica.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-title="Bucle de trabajo">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Bucle de trabajo</p>
+        <h2>Seis puntos de control</h2>
+        <div class="sequence">
+          <div><strong>Objetivo</strong><span>Resultado observable</span></div>
+          <div><strong>Contexto</strong><span>Usuarios y límites</span></div>
+          <div><strong>Plan</strong><span>Decisiones antes del código</span></div>
+          <div><strong>Ejecución</strong><span>Cambios pequeños</span></div>
+          <div><strong>Verificación</strong><span>Pruebas concretas</span></div>
+          <div><strong>Revisión</strong><span>Criterio humano</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Antigravity">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Google Antigravity</p>
+        <h2>Cuatro formas de trabajar</h2>
+        <table class="comparison">
+          <thead><tr><th>Producto</th><th>Uso principal</th><th>Hoy</th></tr></thead>
+          <tbody>
+            <tr><td>Antigravity</td><td>Coordinar agentes y tareas desde una aplicación.</td><td>Contexto</td></tr>
+            <tr><td>Antigravity IDE</td><td>Editar código con agente, terminal y navegador.</td><td>Práctica</td></tr>
+            <tr><td>Antigravity CLI</td><td>Trabajar con agentes desde la terminal.</td><td>Mención</td></tr>
+            <tr><td>Antigravity SDK</td><td>Integrar agentes en sistemas propios.</td><td>Continuación</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide green" data-title="Instalación">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Instalación</p>
+        <h2>Preparación del entorno</h2>
+        <div class="columns">
+          <div>
+            <span class="number">1</span>
+            <h3>Antes de empezar</h3>
+            <ul class="plain-list">
+              <li>Chrome actualizado</li>
+              <li>Cuenta personal de Google</li>
+              <li>Repositorio del taller</li>
+              <li>Git recomendado</li>
+            </ul>
+          </div>
+          <div>
+            <span class="number">2</span>
+            <h3>Primera apertura</h3>
+            <ul class="plain-list">
+              <li>Descarga oficial</li>
+              <li>Inicio de sesión</li>
+              <li>Modo orientado a revisión</li>
+              <li>Solo extensiones necesarias</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Permisos">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Primera configuración</p>
+        <h2>La pregunta clave sobre permisos</h2>
+        <p class="lead">¿Qué puede hacer el agente sin volver a preguntarme?</p>
+        <div class="rule"><span>◆</span></div>
+        <div class="columns">
+          <ul class="plain-list">
+            <li>Ejecutar comandos en la terminal</li>
+            <li>Modificar o borrar archivos</li>
+          </ul>
+          <ul class="plain-list">
+            <li>Usar JavaScript y el navegador</li>
+            <li>Acceder a herramientas externas</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-title="Interfaz">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Antigravity IDE</p>
+        <h2>Cuatro superficies de trabajo</h2>
+        <div class="columns">
+          <div>
+            <h3>Editor y terminal</h3>
+            <p>Código, comandos, errores y procesos en ejecución.</p>
+            <h3>Panel del agente</h3>
+            <p>Conversación, modelo, contexto con <strong>@</strong> y comandos con <strong>/</strong>.</p>
+          </div>
+          <div>
+            <h3>Vista de cambios</h3>
+            <p>Diff, aceptación, rechazo y posibilidad de deshacer.</p>
+            <h3>Artefactos</h3>
+            <p>Plan, tareas, pruebas y explicación final del trabajo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Prompt">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">El encargo</p>
+        <h2>De una idea a una tarea verificable</h2>
+        <div class="columns">
+          <div>
+            <h3>Petición vaga</h3>
+            <pre class="code">Hazme una web de eventos universitarios.</pre>
+          </div>
+          <div>
+            <h3>Información que falta</h3>
+            <ul class="plain-list">
+              <li>Quién la utilizará</li>
+              <li>Qué debe permitir hacer</li>
+              <li>Qué tecnología y límites existen</li>
+              <li>Cómo sabremos que está terminada</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide terracotta" data-title="Anatomía del encargo">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Anatomía del encargo</p>
+        <h2>Ocho ingredientes útiles</h2>
+        <div class="columns">
+          <ol class="plain-list">
+            <li>Resultado deseado</li>
+            <li>Público o caso de uso</li>
+            <li>Requisitos funcionales</li>
+            <li>Restricciones técnicas</li>
+          </ol>
+          <ol class="plain-list">
+            <li>Archivos fuera de alcance</li>
+            <li>Criterios de aceptación</li>
+            <li>Forma de verificación</li>
+            <li>Punto de aprobación</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Práctica">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Práctica guiada</p>
+        <h2>Campus Abierto</h2>
+        <p class="lead">Una agenda de actividades universitarias construida desde una carpeta inicial</p>
+        <div class="rule"><span>◆</span></div>
+        <div class="columns three">
+          <div><h3>Buscar</h3><p>Título, lugar y descripción.</p></div>
+          <div><h3>Filtrar</h3><p>Categorías combinables.</p></div>
+          <div><h3>Recordar</h3><p>Favoritos y tema persistentes.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide green" data-title="Revisión">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Durante la práctica</p>
+        <h2>El plan cuesta menos que el código</h2>
+        <div class="columns">
+          <div>
+            <span class="number">Antes</span>
+            <ul class="plain-list">
+              <li>Revisar supuestos</li>
+              <li>Limitar archivos</li>
+              <li>Corregir decisiones</li>
+            </ul>
+          </div>
+          <div>
+            <span class="number">Después</span>
+            <ul class="plain-list">
+              <li>Leer el diff</li>
+              <li>Ejecutar pruebas</li>
+              <li>Comprobar manualmente</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Extensiones">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Personalización</p>
+        <h2>Reglas, workflows, skills y MCP</h2>
+        <table class="comparison">
+          <thead><tr><th>Mecanismo</th><th>Función</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td>Regla</td><td>Condiciona el comportamiento habitual.</td><td>No añadir dependencias sin aprobación.</td></tr>
+            <tr><td>Workflow</td><td>Guarda un procedimiento invocable.</td><td>Preparar una release.</td></tr>
+            <tr><td>Skill</td><td>Aporta conocimiento especializado.</td><td>Auditar accesibilidad web.</td></tr>
+            <tr><td>MCP</td><td>Conecta herramientas y datos externos.</td><td>Consultar GitHub o desplegar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide dark" data-title="Skill">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Skill del proyecto</p>
+        <h2>Una revisión especializada bajo demanda</h2>
+        <div class="columns">
+          <div>
+            <pre class="code">.agents/
+└── skills/
+    └── revisar-web-asociacion/
+        └── SKILL.md</pre>
+          </div>
+          <div>
+            <ul class="plain-list">
+              <li>Descripción que activa la skill</li>
+              <li>Procedimiento de revisión</li>
+              <li>Formato de salida</li>
+              <li>Límites y puntos de aprobación</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Skill mínima">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Anatomía mínima</p>
+        <h2>El archivo SKILL.md</h2>
+        <pre class="code">---
+name: revisar-web-asociacion
+description: Revisa webs universitarias antes de publicarlas.
+---
+
+# Revisión
+1. Inspecciona sin modificar.
+2. Comprueba teclado, contraste y vista móvil.
+3. Presenta problemas ordenados por prioridad.
+4. Espera aprobación antes de editar.</pre>
+      </div>
+    </section>
+
+    <section class="slide terracotta" data-title="Seguridad">
+      <span class="corner tl"></span><span class="corner br"></span>
+      <div class="slide-content">
+        <p class="kicker">Seguridad</p>
+        <h2>Cinco hábitos antes de confiar</h2>
+        <div class="columns">
+          <ul class="plain-list">
+            <li>Trabajar con Git o una copia recuperable</li>
+            <li>No introducir secretos ni datos personales</li>
+            <li>Revisar comandos destructivos</li>
+          </ul>
+          <ul class="plain-list">
+            <li>Limitar el alcance de cada tarea</li>
+            <li>Verificar el resultado personalmente</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Reto final">
+      <span class="corner tr"></span><span class="corner bl"></span>
+      <div class="slide-content">
+        <p class="kicker">Reto final</p>
+        <h2>Una mejora con control humano</h2>
+        <p class="lead">Añade un filtro de eventos gratuitos y demuestra que funciona con búsqueda y categoría.</p>
+        <div class="rule"><span>◆</span></div>
+        <div class="columns three">
+          <div><span class="number">1</span><h3>Plan</h3><p>Archivos y criterios.</p></div>
+          <div><span class="number">2</span><h3>Cambio</h3><p>Implementación mínima.</p></div>
+          <div><span class="number">3</span><h3>Prueba</h3><p>Agente y revisión manual.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-title="Cierre">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="cover-mark" aria-hidden="true"></div>
+      <div class="slide-content">
+        <p class="kicker">Cierre</p>
+        <h2>La autonomía necesita criterio</h2>
+        <p class="lead">Un buen agente acelera el trabajo. Un buen proceso mantiene el control.</p>
+        <div class="rule"><span>◆</span></div>
+        <div class="presenter">
+          <svg class="gui-logo" viewBox="0 0 500 500" aria-hidden="true">
+            <rect class="logo-light" width="25" height="500" x="-227.19438" y="0" transform="rotate(-90)"/>
+            <path class="logo-dark" fill-rule="evenodd" d="M250 50A200 200 0 0 0 50 250a200 200 0 0 0 200 200 200 200 0 0 0 200-200 200 200 0 0 0-.459-12.496h-60.852l-1.572 2.725A137.5 137.5 0 0 1 387.5 250 137.5 137.5 0 0 1 250 387.5 137.5 137.5 0 0 1 112.5 250 137.5 137.5 0 0 1 250 112.5a137.5 137.5 0 0 1 56.783 12.285l31.334-54.271A200 200 0 0 0 250 50z"/>
+            <rect class="logo-light" width="20" height="500" x="-270.2" y="-500" transform="scale(-1)"/>
+            <rect class="logo-light" width="20" height="550" x="-348.08463" y="-360.58023" transform="rotate(-150)"/>
+            <rect class="logo-dark" width="25" height="500" x="-262.5" y="0" transform="rotate(-90)"/>
+            <text x="379.94388" y="188.88235" transform="scale(.961825 1.03969)" font-family="Arial" font-size="126.441">UI</text>
+          </svg>
+          <div>
+            <strong>David Benito Toresano</strong>
+            <span>Telegram @banaitor · Grupo Universitario de Informática</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <button class="help-button" type="button" aria-label="Ver ayuda" title="Ayuda">?</button>
+  <nav class="nav" aria-label="Navegación de diapositivas">
+    <button id="prev" type="button" aria-label="Diapositiva anterior">‹</button>
+    <button id="next" type="button" aria-label="Diapositiva siguiente">›</button>
+  </nav>
+  <div class="counter" aria-hidden="true"><span id="current">1</span> / <span id="total">1</span></div>
+  <div class="progress" aria-hidden="true"></div>
+
+  <dialog id="help">
+    <h2>Navegación</h2>
+    <p><strong>Avanzar:</strong> flecha derecha, espacio, Page Down o clic.</p>
+    <p><strong>Retroceder:</strong> flecha izquierda, Page Up o Backspace.</p>
+    <p><strong>Inicio y final:</strong> teclas Home y End.</p>
+    <p><strong>Pantalla completa:</strong> tecla F.</p>
+    <p><strong>Imprimir o guardar en PDF:</strong> Ctrl/Cmd + P.</p>
+    <button id="close-help" type="button">Cerrar</button>
+  </dialog>
+
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll('.slide')];
+      const progress = document.querySelector('.progress');
+      const current = document.querySelector('#current');
+      const total = document.querySelector('#total');
+      const help = document.querySelector('#help');
+      let index = Math.max(0, Math.min(slides.length - 1, Number(location.hash.slice(1)) - 1 || 0));
+      let touchStart = null;
+
+      total.textContent = slides.length;
+
+      function show(nextIndex, updateHash = true) {
+        index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+        slides.forEach((slide, slideIndex) => {
+          slide.classList.toggle('active', slideIndex === index);
+          slide.classList.toggle('previous', slideIndex < index);
+          slide.setAttribute('aria-hidden', String(slideIndex !== index));
+        });
+        current.textContent = index + 1;
+        progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+        document.title = `${slides[index].dataset.title} · Programación agéntica`;
+        if (updateHash) history.replaceState(null, '', `#${index + 1}`);
+      }
+
+      function next() { show(index + 1); }
+      function previous() { show(index - 1); }
+
+      document.querySelector('#next').addEventListener('click', next);
+      document.querySelector('#prev').addEventListener('click', previous);
+      document.querySelector('.help-button').addEventListener('click', () => help.showModal());
+      document.querySelector('#close-help').addEventListener('click', () => help.close());
+
+      document.addEventListener('keydown', (event) => {
+        if (help.open && event.key !== 'Escape') return;
+        if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); next(); }
+        if (['ArrowLeft', 'PageUp', 'Backspace'].includes(event.key)) { event.preventDefault(); previous(); }
+        if (event.key === 'Home') show(0);
+        if (event.key === 'End') show(slides.length - 1);
+        if (event.key.toLowerCase() === 'f') {
+          document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+        }
+        if (event.key === '?') help.showModal();
+      });
+
+      document.addEventListener('touchstart', (event) => { touchStart = event.changedTouches[0].clientX; }, { passive: true });
+      document.addEventListener('touchend', (event) => {
+        if (touchStart === null) return;
+        const distance = event.changedTouches[0].clientX - touchStart;
+        if (Math.abs(distance) > 55) distance < 0 ? next() : previous();
+        touchStart = null;
+      }, { passive: true });
+
+      window.addEventListener('hashchange', () => show(Number(location.hash.slice(1)) - 1 || 0, false));
+      show(index, false);
+    })();
+  </script>
+</body>
+</html>
