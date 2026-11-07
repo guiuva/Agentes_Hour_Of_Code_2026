@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Agenda accesible de actividades de una asociación universitaria" />
+    <title>Campus Abierto</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#events-heading">Saltar a los eventos</a>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Asociación universitaria</p>
+        <h1>Campus Abierto</h1>
+        <p class="intro">Descubre talleres, encuentros y actividades del campus.</p>
+      </div>
+      <button id="theme-toggle" class="icon-button" type="button" aria-pressed="false">
+        <span aria-hidden="true">◐</span>
+        <span>Cambiar tema</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="controls" aria-label="Buscar y filtrar eventos">
+        <label class="search-field">
+          <span>Buscar eventos</span>
+          <input id="search" type="search" placeholder="Título, lugar o descripción" autocomplete="off" />
+        </label>
+        <fieldset>
+          <legend>Categoría</legend>
+          <div id="category-filters" class="filter-list"></div>
+        </fieldset>
+      </section>
+
+      <section aria-labelledby="events-heading">
+        <div class="section-heading">
+          <h2 id="events-heading">Próximos eventos</h2>
+          <p id="result-count" aria-live="polite"></p>
+        </div>
+        <div id="event-list" class="event-grid"></div>
+        <div id="empty-state" class="empty-state" hidden>
+          <h3>No encontramos eventos</h3>
+          <p>Prueba otra búsqueda o selecciona todas las categorías.</p>
+          <button id="clear-filters" type="button">Limpiar filtros</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Campus Abierto · Proyecto del taller de programación agéntica</p>
+    </footer>
+    <script src="app.js"></script>
+  </body>
+</html>
+
